@@ -96,9 +96,8 @@ def animated_plot3d():
         spline.set_3d_properties(5.)
         return (quad_pos,) + (spline,)
 
-    quad_pos, = ax.plot([], [], [], 'bX', markersize=10.)  # 使用 plot3D
-    spline, = ax.plot([], [], [], 'r-', markersize=5.)  # 使用 plot3D
-
+    quad_pos, = plt.plot([], [], 'bX', markersize=10.)
+    spline, = plt.plot([], [], 'r-', markersize=5.)
     plt.xlabel('X position (m)')
     plt.ylabel('Y position (m)')
     line_ani = animation.FuncAnimation(fig, update, sim_ctr, interval=5, repeat=True)
