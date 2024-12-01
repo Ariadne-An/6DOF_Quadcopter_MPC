@@ -96,13 +96,55 @@ def animated_plot3d():
         spline.set_3d_properties(5.)
         return (quad_pos,) + (spline,)
 
-    quad_pos, = plt.plot([], [], 'bX', markersize=10.)
-    spline, = plt.plot([], [], 'r-', markersize=5.)
+    quad_pos, = ax.plot([], [], [], 'bX', markersize=10.)  # 使用 plot3D
+    spline, = ax.plot([], [], [], 'r-', markersize=5.)  # 使用 plot3D
+
     plt.xlabel('X position (m)')
     plt.ylabel('Y position (m)')
     line_ani = animation.FuncAnimation(fig, update, sim_ctr, interval=5, repeat=True)
-    # line_ani.save('/home/tyler/Videos/quadcopter_mpc_3d.mp4')
+    line_ani.save('/Users/ariadne/Desktop/CODE/6DOF_Quadcopter_MPC/Viz/3D-animation.mp4')
     plt.show()
+
+# def animated_plot2d():
+#     fig = plt.figure()
+#     ax = plt.axes()
+#     ax.set_xlim(-1., 6.)
+#     ax.set_ylim(-1., 6.)
+#
+#     def update(ii):
+#         quad_pos.set_data([x_pos[ii]], [y_pos[ii]])  # 使用列表
+#         spline.set_data(spline_x_data, spline_y_data)
+#         curr_goal.set_data([ref_x_hist[ii]], [ref_y_hist[ii]])  # 使用列表
+#         return (quad_pos,) + (spline,) + (curr_goal, )
+#
+#     quad_pos, = plt.plot([], [], 'bX', markersize=6.)
+#     spline, = plt.plot([], [], 'r-', markersize=5.)
+#     curr_goal, = plt.plot([], [], 'gX', markersize=6.)
+#     plt.xlabel('X position (m)')
+#     plt.ylabel('Y position (m)')
+#     line_ani = animation.FuncAnimation(fig, update, sim_ctr, interval=5, repeat=True)
+#     plt.show()
+# def animated_plot3d():
+#     fig = plt.figure()
+#     ax = p3.Axes3D(fig)
+#     ax.set_xlim(-1., 6.)
+#     ax.set_ylim(-1., 6.)
+#     ax.set_zlim(0., 10.)
+#
+#     def update(ii):
+#         quad_pos.set_data([x_pos[ii]], [y_pos[ii]])  # 使用列表
+#         quad_pos.set_3d_properties([z_pos[ii]])  # 同样使用列表
+#         spline.set_data(spline_x_data, spline_y_data)
+#         spline.set_3d_properties(5.)  # 保持固定 z 值
+#         return (quad_pos,) + (spline,)
+#
+#     quad_pos, = ax.plot([], [], [], 'bX', markersize=10.)  # 使用 ax.plot 创建 3D 对象
+#     spline, = ax.plot([], [], [], 'r-', markersize=5.)
+#     plt.xlabel('X position (m)')
+#     plt.ylabel('Y position (m)')
+#     line_ani = animation.FuncAnimation(fig, update, sim_ctr, interval=5, repeat=True)
+#     plt.show()
+
 
 
 class SplineGenerator:
@@ -254,7 +296,7 @@ class Quadcopter:
         for t in range(N):
             cost += cp.quad_form(rx - x[:, t], self.Q) + cp.quad_form(u[:, t], self.R)  # Linear Quadratic cost
             constr += [xmin <= x[:, t], x[:, t] <= xmax]  # State constraints
-            constr += [x[:, t + 1] == self.A_zoh * x[:, t] + self.B_zoh * u[:, t]]
+            constr += [x[:, t + 1] == self.A_zoh @ x[:, t] + self.B_zoh @ u[:, t]]
 
         cost += cp.quad_form(x[:, N] - rx, self.Q)  # End of trajectory error cost
         problem = cp.Problem(cp.Minimize(cost), constr)
@@ -402,7 +444,7 @@ if __name__ == "__main__":
         # Solve convex optimization problem
         x_init.value = x0
         prob.solve(solver=cp.OSQP, warm_start=True)
-        x0 = quad.A_zoh.dot(x0) + quad.B_zoh.dot(u[:, 0].value)
+        x0 = quad.A_zoh @ x0 + quad.B_zoh @ u[:, 0].value
 
         # Send only first calculated command to quadcopter, then run optimization again
         quad(u[0, 0].value, u[1, 0].value, u[2, 0].value, u[3, 0].value)
